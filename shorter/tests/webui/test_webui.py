@@ -28,10 +28,10 @@ from shorter.database import Base, db_session
 from shorter.web import app
 
 TEST_URL = 'http://example.com'
+config.base_url = 'http://localhost:5001'
 
 
 class UITests(unittest.TestCase):
-
     def setUp(self):
         self.driver = webdriver.Firefox()
 
@@ -39,7 +39,8 @@ class UITests(unittest.TestCase):
         db_session.configure(bind=engine)
         Base.metadata.create_all(bind=engine)
 
-        self.flask_process = multiprocessing.Process(target=app.run)
+        self.flask_process = multiprocessing.Process(
+            target=app.run, args=('localhost', 5001))
         self.flask_process.start()
 
     def tearDown(self):
