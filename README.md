@@ -27,3 +27,11 @@ In order to start the server, just run the ``run_server.py`` script in the proje
 $ ./run_server.py
  * Running on http://127.0.0.1:5000/
 ```
+
+## Testing
+
+You can run most of the tests from the project's base directory using your favourite python test runner e.g.
+
+```bash
+$ python -m unittest discover
+```
