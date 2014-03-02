@@ -1,4 +1,8 @@
 {% extends "layout.html" %}
 {% block body %}
 <h1 id='banner'>Hi, this is Shorter!</h1>
+<p>Enter your URL below to shorten it:</p>
+<form id="shorten" action="/" method="POST">
+  <input type="text" name="url">
+</form>
 {% endblock %} 

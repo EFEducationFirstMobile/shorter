@@ -36,3 +36,9 @@ class UITests(unittest.TestCase):
 
         banner = self.driver.find_element_by_id('banner')
         self.assertIn('Hi', banner.text)
+
+    def test_index_has_form(self):
+        self.driver.get(config.base_url)
+
+        form = self.driver.find_element_by_id('shorten')
+        self.assertEqual(form.tag_name, 'form')
