@@ -1,6 +1,6 @@
 import unittest
 
-import shorten
+from shorter import shorten
 
 
 class TestShorten(unittest.TestCase):

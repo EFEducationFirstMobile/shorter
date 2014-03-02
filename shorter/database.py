@@ -18,7 +18,8 @@
 from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 
-from config import sql_connection
+from shorter.config import sql_connection
+
 
 Base = declarative_base()
 ENGINE = create_engine(sql_connection)
