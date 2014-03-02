@@ -16,14 +16,18 @@
 # along with shorter. If not, see <http://www.gnu.org/licenses/>.
 
 import multiprocessing
+from urllib.parse import urljoin
 import unittest
 
 from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
 from sqlalchemy import create_engine
 
 from shorter import config
 from shorter.database import Base, db_session
 from shorter.web import app
+
+TEST_URL = 'http://example.com'
 
 
 class UITests(unittest.TestCase):
@@ -55,3 +59,17 @@ class UITests(unittest.TestCase):
 
         form = self.driver.find_element_by_id('shorten')
         self.assertEqual(form.tag_name, 'form')
+
+    def test_shortens_url(self):
+        self.driver.get(config.base_url)
+        url_field = self.driver.find_element_by_name('url')
+        url_field.send_keys(TEST_URL)
+        url_field.send_keys(Keys.RETURN)
+
+        shortened = self.driver.find_element_by_id('shorter')
+        self.assertEqual(shortened.tag_name, 'a')
+        self.assertEqual(urljoin(config.base_url, '1'), shortened.text)
+
+        original = self.driver.find_element_by_id('original')
+        self.assertEqual(original.tag_name, 'a')
+        self.assertEqual(TEST_URL, original.text)
