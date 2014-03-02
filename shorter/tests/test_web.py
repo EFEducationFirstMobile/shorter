@@ -24,6 +24,8 @@ from shorter import config
 from shorter.database import Base, db_session
 from shorter.web import app
 
+TEST_URL = 'http://example.com'
+
 
 class WebTest(unittest.TestCase):
 
@@ -57,7 +59,18 @@ class WebTest(unittest.TestCase):
                       resp.data.decode('utf-8'))
 
     def test_shortened_url(self):
-        resp = self.client.post('/', data=dict(url='http://example.com/'))
+        resp = self.client.post('/', data=dict(url=TEST_URL))
 
         self.assertEqual(resp.status_code, 200)
         self.assertIn(urljoin(config.base_url, "1"), resp.data.decode('utf-8'))
+
+    def test_expand_not_found(self):
+        resp = self.client.get('/not-found')
+
+        self.assertEqual(resp.status_code, 404)
+
+    def test_expand_found(self):
+        self.client.post('/', data=dict(url=TEST_URL))
+        resp = self.client.get('/1')
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp.headers['location'], TEST_URL)

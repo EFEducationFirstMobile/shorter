@@ -18,7 +18,8 @@
 from urllib.parse import urljoin, urlparse
 
 from flask import Flask
-from flask import abort, render_template, request
+from flask import abort, redirect, render_template, request
+from sqlalchemy import orm
 
 from shorter import config
 from shorter import database
@@ -61,6 +62,21 @@ def shorten():
     shorter = urljoin(config.base_url, db_url.short)
 
     return render_template("shorter.html", original=url, shorter=shorter)
+
+
+@app.route("/<short>")
+def expand(short):
+    """Redirects the user to a URL which has already been shortened
+
+    :short: a string which identifies an already shortened URL
+
+    """
+    try:
+        url = db_session.query(database.Url).filter_by(short=short).one()
+    except orm.exc.NoResultFound:
+        abort(404)
+
+    return redirect(url.url)
 
 
 @app.teardown_appcontext
