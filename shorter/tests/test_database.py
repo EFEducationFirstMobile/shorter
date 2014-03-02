@@ -87,3 +87,11 @@ class DatabaseTest(unittest.TestCase):
         self.session.add(url1)
         self.session.add(url2)
         self.assertNotEqual(url1.short, url2.short)
+
+    def test_accepts_url_with_no_scheme(self):
+        test_url = 'www.example.com'
+        try:
+            database.Url(test_url)
+        except exception.InvalidURL:
+            self.fail("URL without scheme raised validation error: "
+                      + test_url)
