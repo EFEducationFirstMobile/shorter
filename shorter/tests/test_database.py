@@ -21,6 +21,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from shorter import database
+from shorter import exception
 
 
 class DatabaseTest(unittest.TestCase):
@@ -52,3 +53,8 @@ class DatabaseTest(unittest.TestCase):
         self.session.add(url)
         self.session.commit()
         self.assertEqual(url.short, '1b')
+
+    def test_invalid_url_raises(self):
+        self.assertRaises(exception.InvalidURL, database.Url, 'not-a-url')
+        self.assertRaises(exception.InvalidURL, database.Url,
+                          'http://almost-a.url/but/?it=has& spa ces')

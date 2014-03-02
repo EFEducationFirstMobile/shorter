@@ -15,10 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with shorter. If not, see <http://www.gnu.org/licenses/>.
 
+import re
+
 from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import validates
 
 from shorter.config import sql_connection
+from shorter import exception
 from shorter.shorten import int_to_base36
 
 Base = declarative_base()
@@ -40,3 +44,19 @@ class Url(Base):
     @property
     def short(self):
         return int_to_base36(self.id)
+
+    @validates('url')
+    def validate_url(self, key, url):
+        # thank you django.core.validators
+        regex = re.compile(
+            r'^(?:http|ftp)s?://'  # scheme
+            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+'
+            r'(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
+            r'localhost|'  # localhost...
+            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|'  # ...or ipv4
+            r'\[?[A-F0-9]*:[A-F0-9:]+\]?)'  # ...or ipv6
+            r'(?::\d+)?'  # optional port
+            r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+        if not regex.match(url):
+            raise exception.InvalidURL("This URL is malformed: " + url)
+        return url
