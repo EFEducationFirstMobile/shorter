@@ -23,6 +23,8 @@ from sqlalchemy.orm import sessionmaker
 from shorter import database
 from shorter import exception
 
+EXAMPLE_URL = 'http://example.com'
+
 
 class DatabaseTest(unittest.TestCase):
     def setUp(self):
@@ -31,24 +33,23 @@ class DatabaseTest(unittest.TestCase):
         Session = sessionmaker(bind=engine)
         self.session = Session()
 
-    def test_create_one(self):
-        example_url = 'http://example.com'
-        url = database.Url(example_url)
+    def _create_url(self):
+        url = database.Url(EXAMPLE_URL)
         self.session.add(url)
         self.session.commit()
+        return url
+
+    def test_create_one(self):
+        url = self._create_url()
         self.assertEqual(url.id, 1)
-        self.assertEqual(url.url, example_url)
+        self.assertEqual(url.url, EXAMPLE_URL)
 
     def test_short_url_attribute_one(self):
-        example_url = 'http://example.com'
-        url = database.Url(example_url)
-        self.session.add(url)
-        self.session.commit()
+        url = self._create_url()
         self.assertEqual(url.short, '1')
 
     def test_short_url_attribute_base36(self):
-        example_url = 'http://example.com'
-        url = database.Url(example_url)
+        url = database.Url(EXAMPLE_URL)
         url.id = '47'
         self.session.add(url)
         self.session.commit()
@@ -61,5 +62,5 @@ class DatabaseTest(unittest.TestCase):
                           'http://almost-a.url/but/?it=has& spa ces')
 
     def test_url_spaces_are_stripped(self):
-        url = database.Url('  http://example.com   ')
-        self.assertEqual(url.url, 'http://example.com')
+        url = database.Url('  {0}   '.format(EXAMPLE_URL))
+        self.assertEqual(url.url, EXAMPLE_URL)
