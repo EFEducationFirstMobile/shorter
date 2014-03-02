@@ -73,3 +73,17 @@ class UITests(unittest.TestCase):
         original = self.driver.find_element_by_id('original')
         self.assertEqual(original.tag_name, 'a')
         self.assertEqual(TEST_URL, original.text)
+
+    def test_expand(self):
+        self.driver.get(config.base_url)
+        url_field = self.driver.find_element_by_name('url')
+        url_field.send_keys(TEST_URL)
+        url_field.send_keys(Keys.RETURN)
+
+        self.driver.get(urljoin(config.base_url, '1'))
+        self.assertIn('Example Domain', self.driver.title)
+
+    def test_expand_not_found(self):
+        self.driver.get(urljoin(config.base_url, 'not-found'))
+
+        self.assertIn('404', self.driver.title)
