@@ -36,7 +36,7 @@ class Url(Base):
     url = Column(String)
 
     def __init__(self, url):
-        self.url = url
+        self.url = url.strip()
 
     def __repr__(self):
         return "<Url(id={0} url={1})>".format(self.id, self.url)

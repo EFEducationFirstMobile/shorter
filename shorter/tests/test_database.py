@@ -58,3 +58,7 @@ class DatabaseTest(unittest.TestCase):
         self.assertRaises(exception.InvalidURL, database.Url, 'not-a-url')
         self.assertRaises(exception.InvalidURL, database.Url,
                           'http://almost-a.url/but/?it=has& spa ces')
+
+    def test_url_spaces_are_stripped(self):
+        url = database.Url('  http://example.com   ')
+        self.assertEqual(url.url, 'http://example.com')
