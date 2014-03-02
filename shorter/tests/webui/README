@@ -1,0 +1,2 @@
+This directory is not a python package because we don't want these tests
+to run together with the rest of the testsuite.
