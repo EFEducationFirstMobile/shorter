@@ -37,3 +37,18 @@ class DatabaseTest(unittest.TestCase):
         self.session.commit()
         self.assertEqual(url.id, 1)
         self.assertEqual(url.url, example_url)
+
+    def test_short_url_attribute_one(self):
+        example_url = 'http://example.com'
+        url = database.Url(example_url)
+        self.session.add(url)
+        self.session.commit()
+        self.assertEqual(url.short, '1')
+
+    def test_short_url_attribute_base36(self):
+        example_url = 'http://example.com'
+        url = database.Url(example_url)
+        url.id = '47'
+        self.session.add(url)
+        self.session.commit()
+        self.assertEqual(url.short, '1b')

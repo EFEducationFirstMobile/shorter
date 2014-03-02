@@ -19,7 +19,7 @@ from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 
 from shorter.config import sql_connection
-
+from shorter.shorten import int_to_base36
 
 Base = declarative_base()
 ENGINE = create_engine(sql_connection)
@@ -36,3 +36,7 @@ class Url(Base):
 
     def __repr__(self):
         return "<Url(id={0} url={1})>".format(self.id, self.url)
+
+    @property
+    def short(self):
+        return int_to_base36(self.id)
