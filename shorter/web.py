@@ -60,7 +60,7 @@ def shorten():
 
     shorter = urljoin(config.base_url, db_url.short)
 
-    return shorter
+    return render_template("shorter.html", original=url, shorter=shorter)
 
 
 @app.teardown_appcontext
