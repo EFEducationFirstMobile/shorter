@@ -15,14 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with shorter. If not, see <http://www.gnu.org/licenses/>.
 
+from urllib.parse import urlparse
+
 from flask import Flask
 from flask import abort, render_template, request
 
+from shorter import config
 from shorter import database
 from shorter.database import db_session
 from shorter import exception
 
 app = Flask(__name__)
+
+OUR_HOSTNAME = urlparse(config.base_url).hostname
 
 
 @app.route("/")
@@ -43,9 +48,12 @@ def shorten():
         abort(400, "The required form value argument 'url' was not provided.")
 
     try:
-        url = database.Url(url)
+        db_url = database.Url(url)
     except exception.InvalidURL as e:
         abort(400, e)
+
+    if urlparse(url).hostname == OUR_HOSTNAME:
+        abort(400, "That is already a Shorter link.")
 
 
 @app.teardown_appcontext

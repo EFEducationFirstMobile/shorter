@@ -17,6 +17,7 @@
 
 import unittest
 
+from shorter import config
 from shorter.web import app
 
 
@@ -35,4 +36,10 @@ class WebTest(unittest.TestCase):
         resp = self.client.post('/', data=dict(url='not-a-url'))
         self.assertEqual(resp.status_code, 400)
         self.assertIn("This URL is malformed: not-a-url",
+                      resp.data.decode('utf-8'))
+
+    def test_our_url(self):
+        resp = self.client.post('/', data=dict(url=config.base_url + '/foo'))
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("That is already a Shorter link.",
                       resp.data.decode('utf-8'))
