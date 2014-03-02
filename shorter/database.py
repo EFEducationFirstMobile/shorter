@@ -68,5 +68,6 @@ urls = Table('urls', Base.metadata, autoload=True, autoload_with=ENGINE)
 # use to store our own identifier for the urls
 @event.listens_for(Url, 'after_insert')
 def base36ify(mapper, connect, target, retval=True):
-    connect.execute(urls.update(), {'short': int_to_base36(int(target.id))})
+    connect.execute(urls.update().where(urls.c.id == target.id),
+                    {'short': int_to_base36(int(target.id))})
     return target

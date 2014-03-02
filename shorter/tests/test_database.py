@@ -80,3 +80,10 @@ class DatabaseTest(unittest.TestCase):
         url2.short = url.short
         self.session.add(url2)
         self.assertRaises(exc.IntegrityError, self.session.commit)
+
+    def test_short_attr_only_updates_one_row(self):
+        url1 = self._create_url()
+        url2 = self._create_url()
+        self.session.add(url1)
+        self.session.add(url2)
+        self.assertNotEqual(url1.short, url2.short)
