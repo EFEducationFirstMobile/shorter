@@ -15,21 +15,34 @@
 # You should have received a copy of the GNU General Public License
 # along with shorter. If not, see <http://www.gnu.org/licenses/>.
 
+import multiprocessing
 import unittest
 
 from selenium import webdriver
+from sqlalchemy import create_engine
 
 from shorter import config
+from shorter.database import Base, db_session
+from shorter.web import app
 
 
 class UITests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.driver = webdriver.Firefox()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.close()
+    def setUp(self):
+        self.driver = webdriver.Firefox()
+
+        engine = create_engine('sqlite://')
+        db_session.configure(bind=engine)
+        Base.metadata.create_all(bind=engine)
+
+        self.flask_process = multiprocessing.Process(target=app.run)
+        self.flask_process.start()
+
+    def tearDown(self):
+        self.driver.close()
+        self.flask_process.terminate()
+
+        db_session.remove()
 
     def test_shorter_says_hello(self):
         self.driver.get(config.base_url)

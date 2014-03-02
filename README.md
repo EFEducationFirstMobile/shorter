@@ -46,7 +46,7 @@ You'll need a few extra dependencies first:
 $ pip install -r test-requirements.txt
 ```
 
-You'll also need to have an X server running and the Firefox browser installed. Additionally, the shorter Flask server must be running (see above). Make sure the ``base_url`` value in ``shorter/config.py`` is correct. Then you can run the webui tests like e.g.:
+You'll also need to have an X server running and the Firefox browser installed. Make sure the ``base_url`` value in ``shorter/config.py`` is correct. Then you can run the webui tests like e.g.:
 
 ```bash
 $ python -m unittest discover -s shorter/tests/webui/
