@@ -18,8 +18,8 @@
 import unittest
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import exc
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import exc
+from sqlalchemy import orm
 
 from shorter import database
 from shorter import exception
@@ -31,7 +31,7 @@ class DatabaseTest(unittest.TestCase):
     def setUp(self):
         engine = create_engine('sqlite://')
         database.Base.metadata.create_all(bind=engine)
-        Session = sessionmaker(bind=engine)
+        Session = orm.sessionmaker(bind=engine)
         self.session = Session()
 
     def _create_url(self):
@@ -70,6 +70,13 @@ class DatabaseTest(unittest.TestCase):
         self._create_url()
         try:
             self.session.query(database.Url).filter_by(short='1').one()
-        except exc.NoResultFound:
+        except orm.exc.NoResultFound:
             self.fail("Could not find test URL when querying by the "
                       "'short' attribute.")
+
+    def test_short_attr_is_unique(self):
+        url = self._create_url()
+        url2 = database.Url(EXAMPLE_URL)
+        url2.short = url.short
+        self.session.add(url2)
+        self.assertRaises(exc.IntegrityError, self.session.commit)

@@ -36,7 +36,7 @@ class Url(Base):
 
     id = Column(Integer, primary_key=True)
     url = Column(String)
-    short = Column(String)
+    short = Column(String, index=True, unique=True)
 
     def __init__(self, url):
         self.url = url.strip()
@@ -63,6 +63,8 @@ class Url(Base):
 urls = Table('urls', Base.metadata, autoload=True, autoload_with=ENGINE)
 
 
+# rely on the database to give us a unique sequential id which we then
+# use to store our own identifier for the urls
 @event.listens_for(Url, 'after_insert')
 def base36ify(mapper, connect, target, retval=True):
     connect.execute(urls.update(), {'short': int_to_base36(int(target.id))})
