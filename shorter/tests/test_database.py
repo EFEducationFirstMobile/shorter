@@ -55,6 +55,7 @@ class DatabaseTest(unittest.TestCase):
         self.assertEqual(url.short, '1b')
 
     def test_invalid_url_raises(self):
+        self.assertRaises(exception.InvalidURL, database.Url, '')
         self.assertRaises(exception.InvalidURL, database.Url, 'not-a-url')
         self.assertRaises(exception.InvalidURL, database.Url,
                           'http://almost-a.url/but/?it=has& spa ces')
