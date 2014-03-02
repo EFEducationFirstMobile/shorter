@@ -18,6 +18,7 @@
 import unittest
 
 from sqlalchemy import create_engine
+from sqlalchemy.orm import exc
 from sqlalchemy.orm import sessionmaker
 
 from shorter import database
@@ -64,3 +65,11 @@ class DatabaseTest(unittest.TestCase):
     def test_url_spaces_are_stripped(self):
         url = database.Url('  {0}   '.format(EXAMPLE_URL))
         self.assertEqual(url.url, EXAMPLE_URL)
+
+    def test_query_by_short(self):
+        self._create_url()
+        try:
+            self.session.query(database.Url).filter_by(short='1').one()
+        except exc.NoResultFound:
+            self.fail("Could not find test URL when querying by the "
+                      "'short' attribute.")

@@ -17,7 +17,9 @@
 
 import re
 
-from sqlalchemy import Column, Integer, String, create_engine
+from sqlalchemy import Column, Integer, String, Table
+from sqlalchemy import create_engine
+from sqlalchemy import event
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import validates
 
@@ -34,16 +36,13 @@ class Url(Base):
 
     id = Column(Integer, primary_key=True)
     url = Column(String)
+    short = Column(String)
 
     def __init__(self, url):
         self.url = url.strip()
 
     def __repr__(self):
         return "<Url(id={0} url={1})>".format(self.id, self.url)
-
-    @property
-    def short(self):
-        return int_to_base36(self.id)
 
     @validates('url')
     def validate_url(self, key, url):
@@ -60,3 +59,11 @@ class Url(Base):
         if not regex.match(url):
             raise exception.InvalidURL("This URL is malformed: " + url)
         return url
+
+urls = Table('urls', Base.metadata, autoload=True, autoload_with=ENGINE)
+
+
+@event.listens_for(Url, 'after_insert')
+def base36ify(mapper, connect, target, retval=True):
+    connect.execute(urls.update(), {'short': int_to_base36(int(target.id))})
+    return target
