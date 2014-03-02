@@ -15,16 +15,28 @@
 # You should have received a copy of the GNU General Public License
 # along with shorter. If not, see <http://www.gnu.org/licenses/>.
 
+from urllib.parse import urljoin
 import unittest
 
+from sqlalchemy import create_engine
+
 from shorter import config
+from shorter.database import Base, db_session
 from shorter.web import app
 
 
 class WebTest(unittest.TestCase):
 
     def setUp(self):
+        engine = create_engine('sqlite://')
+        db_session.configure(bind=engine)
+        Base.metadata.create_all(bind=engine)
+
+        app.testing = True
         self.client = app.test_client()
+
+    def tearDown(self):
+        db_session.remove()
 
     def test_empty_post(self):
         resp = self.client.post('/', data=dict())
@@ -43,3 +55,9 @@ class WebTest(unittest.TestCase):
         self.assertEqual(resp.status_code, 400)
         self.assertIn("That is already a Shorter link.",
                       resp.data.decode('utf-8'))
+
+    def test_shortened_url(self):
+        resp = self.client.post('/', data=dict(url='http://example.com/'))
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(urljoin(config.base_url, "1"), resp.data.decode('utf-8'))

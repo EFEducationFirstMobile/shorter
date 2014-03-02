@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with shorter. If not, see <http://www.gnu.org/licenses/>.
 
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 from flask import Flask
 from flask import abort, render_template, request
@@ -54,6 +54,13 @@ def shorten():
 
     if urlparse(url).hostname == OUR_HOSTNAME:
         abort(400, "That is already a Shorter link.")
+
+    db_session.add(db_url)
+    db_session.commit()
+
+    shorter = urljoin(config.base_url, db_url.short)
+
+    return shorter
 
 
 @app.teardown_appcontext
