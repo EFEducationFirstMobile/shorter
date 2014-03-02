@@ -21,7 +21,7 @@ from sqlalchemy import Column, Integer, String, Table
 from sqlalchemy import create_engine
 from sqlalchemy import event
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import validates
+from sqlalchemy.orm import scoped_session, sessionmaker, validates
 
 from shorter.config import sql_connection
 from shorter import exception
@@ -29,6 +29,7 @@ from shorter.shorten import int_to_base36
 
 Base = declarative_base()
 ENGINE = create_engine(sql_connection)
+db_session = scoped_session(sessionmaker(bind=ENGINE))
 
 
 class Url(Base):
