@@ -4,6 +4,7 @@ Shorter is a simple URL Shortener built with Flask and SQLAlchemy named after a 
 
 ## Installation
 
+Shorter has only been tested with python 3.3.x. 
 
 Install the requirements from the ``requirements.txt`` file:
 
