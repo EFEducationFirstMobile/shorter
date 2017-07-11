@@ -20,6 +20,7 @@ from urllib.parse import urljoin, urlparse
 from flask import (
     Flask,
     abort,
+    g,
     jsonify,
     make_response,
     redirect,
@@ -44,6 +45,13 @@ app.secret_key = 'OGV1Ra6mUNiHyTeOxOa00QlZ09FeIxO'
 
 OUR_HOSTNAME = urlparse(config.base_url).hostname
 MAX_SHORTURL_LENGTH = 23
+
+
+@app.after_request
+def call_after_request_callbacks(response):
+    for callback in getattr(g, 'after_request_callbacks', ()):
+        callback(response)
+    return response
 
 
 @app.route("/")
@@ -141,9 +149,27 @@ def expand(short):
         full_shorturl = urljoin(config.base_url, url.short)
         return jsonify(
             url=url.url,
-            shorturl=full_shorturl
+            shorturl=full_shorturl,
+            accessed=url.accessed,
+            created=url.created.isoformat(),
         )
+
+    @after_this_request
+    def increment_accessed(response):
+        # avoid concurrency issues by letting the database increment the
+        # column
+        url.accessed = database.Url.accessed + 1
+        db_session.add(url)
+        db_session.commit()
+
     return redirect(url.url)
+
+
+def after_this_request(f):
+    if not hasattr(g, 'after_request_callbacks'):
+        g.after_request_callbacks = []
+    g.after_request_callbacks.append(f)
+    return f
 
 
 @app.teardown_appcontext

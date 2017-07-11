@@ -20,7 +20,10 @@ import unittest
 
 from sqlalchemy import create_engine
 
-from shorter import config
+from shorter import (
+    config,
+    database,
+)
 from shorter.database import Base, db_session
 from shorter.utils import get_response_json
 from shorter.web import app
@@ -143,16 +146,23 @@ class WebTest(unittest.TestCase):
         self.assertEqual(resp.status_code, 302)
         self.assertEqual(resp.headers['location'], TEST_URL)
 
+        url = db_session.query(database.Url).one()
+        self.assertEqual(url.accessed, 1)
+
     def test_expand_json(self):
         self.client.post('/', data=dict(url=TEST_URL))
         default_shorturl = '/1'
         resp = self.json_get(default_shorturl)
 
+        db_url = db_session.query(database.Url).one()
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(
             resp.json,
             {'shorturl': urljoin(config.base_url, default_shorturl),
-             'url': TEST_URL})
+             'url': TEST_URL,
+             'created': db_url.created.isoformat(),
+             'accessed': 0
+            })
 
     def json_get(self, *args, **kwargs):
         response = self._json_req(*args, method='get', **kwargs)

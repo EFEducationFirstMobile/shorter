@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 Ionuț Arțăriși <ionut@artarisi.eu>
+# Copyright (c) 2014-2017 Ionuț Arțăriși <ionut@artarisi.eu>
 # This file is part of shorter.
 
 # shorter is free software: you can redistribute it and/or modify
@@ -17,9 +17,16 @@
 
 import re
 
-from sqlalchemy import Column, Integer, String, Table
-from sqlalchemy import create_engine
-from sqlalchemy import event
+from sqlalchemy import (
+    Column,
+    DateTime,
+    Integer,
+    String,
+    Table,
+    create_engine,
+    event,
+    func,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker, validates
 
@@ -38,6 +45,8 @@ class Url(Base):
     id = Column(Integer, primary_key=True)
     url = Column(String)
     short = Column(String, index=True, unique=True)
+    created = Column(DateTime(), nullable=False, default=func.now())
+    accessed = Column(Integer, nullable=False, server_default='0')
 
     def __init__(self, url, short=None):
         self.url = url.strip()
