@@ -17,6 +17,7 @@
 
 import hmac
 import re
+from urllib.parse import urljoin
 
 import bcrypt
 from sqlalchemy import (
@@ -38,12 +39,14 @@ from sqlalchemy.orm import (
     sessionmaker,
     validates)
 
-from shorter.config import sql_connection
-from shorter import exception
+from shorter import (
+    config,
+    exception,
+)
 from shorter.shorten import int_to_base36
 
 
-ENGINE = create_engine(sql_connection)
+ENGINE = create_engine(config.sql_connection)
 # rounds for the bcrypt salt algo
 SALT_ROUNDS = 8
 
@@ -90,6 +93,15 @@ class Url(Base):
         if not regex.match(url):
             raise exception.InvalidURL("This URL is malformed: " + url)
         return url
+
+    def to_dict(self):
+        full_shorturl = urljoin(config.base_url, self.short)
+        return {
+            'url': self.url,
+            'shorturl': full_shorturl,
+            'accessed': self.accessed,
+            'created': self.created.isoformat(),
+        }
 
 
 urls = Table('urls', Base.metadata, autoload=True, autoload_with=ENGINE)

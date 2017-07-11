@@ -77,13 +77,14 @@ def call_after_request_callbacks(response):
 def index():
     """Show the frontpage
 
-    Return the list of URLs that the logged in user has shortened
+    If a JSON content-type is expected, then return the list of URLs
+    that the logged in user has shortened.
     """
     if not request_wants_json():
         return render_template("index.html")
 
     return jsonify(
-        [urljoin(config.base_url, url.short) for url in g.user.urls])
+        [url.to_dict() for url in g.user.urls])
 
 
 class ShortenForm(FlaskForm):
@@ -177,13 +178,7 @@ def expand(short):
         abort(404)
 
     if request_wants_json():
-        full_shorturl = urljoin(config.base_url, url.short)
-        return jsonify(
-            url=url.url,
-            shorturl=full_shorturl,
-            accessed=url.accessed,
-            created=url.created.isoformat(),
-        )
+        return jsonify(url.to_dict())
 
     @after_this_request
     def increment_accessed(response):
