@@ -26,7 +26,6 @@ from flask import (
     redirect,
     render_template,
 )
-from flask_httpauth import HTTPBasicAuth
 from flask_wtf import FlaskForm
 from sqlalchemy import orm
 from sqlalchemy.exc import IntegrityError
@@ -36,6 +35,7 @@ from shorter import config
 from shorter import database
 from shorter.database import db_session
 from shorter import exception
+from shorter.httpauth import HTTPBasicAuth
 from shorter.shorten import BASE36_CHARS
 from shorter.utils import request_wants_json
 
@@ -73,8 +73,17 @@ def call_after_request_callbacks(response):
 
 
 @app.route("/")
+@auth.login_optional
 def index():
-    return render_template("index.html")
+    """Show the frontpage
+
+    Return the list of URLs that the logged in user has shortened
+    """
+    if not request_wants_json():
+        return render_template("index.html")
+
+    return jsonify(
+        [urljoin(config.base_url, url.short) for url in g.user.urls])
 
 
 class ShortenForm(FlaskForm):

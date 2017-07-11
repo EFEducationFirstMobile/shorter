@@ -177,6 +177,18 @@ class WebTest(unittest.TestCase):
              'created': db_url.created.isoformat(),
              'accessed': 0})
 
+    def test_list_urls(self):
+        test_urls = ('{}/{}'.format(TEST_URL, i) for i in range(3))
+        expected_shortened_urls = [
+            urljoin(config.base_url, str(i+1)) for i in range(3)]
+
+        for url in test_urls:
+            self.json_post('/', data=dict(url=url))
+
+        resp = self.json_get('/')
+        self.assertEqual(resp.status_code, 200, resp.data)
+        self.assertEqual(resp.json, expected_shortened_urls)
+
     def json_get(self, *args, **kwargs):
         response = self._json_req(*args, method='get', **kwargs)
         return response
