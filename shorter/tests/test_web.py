@@ -64,32 +64,36 @@ class WebTest(unittest.TestCase):
         shorturl = "myshorturl"
         resp = self.client.post(
             '/', data=dict(
-                url='http://example.com',
-                shorturl=shorturl
-            ))
+                url=TEST_URL,
+                shorturl=shorturl))
         self.assertEqual(resp.status_code, 200, resp.data)
         self.assertIn(
             urljoin(config.base_url, shorturl), resp.data.decode('utf-8'))
 
     def test_custom_url_json(self):
         shorturl = "myshorturl"
-        url = 'http://example.com'
         resp = self.json_post(
             '/', data=dict(
-                url=url,
-                shorturl=shorturl
-            ))
+                url=TEST_URL,
+                shorturl=shorturl))
         self.assertEqual(resp.status_code, 200, resp.data)
         self.assertEqual(
             resp.json,
             {'shorturl': urljoin(config.base_url, shorturl),
-             'url': url})
+             'url': TEST_URL})
 
     def test_custom_url_already_taken(self):
         pass
 
     def test_custom_url_too_long(self):
-        pass
+        shorturl = "o" * 24
+        resp = self.json_post(
+            '/', data=dict(
+                url=TEST_URL,
+                shorturl=shorturl))
+        self.assertEqual(resp.status_code, 400, resp.data)
+        self.assertEqual(
+            resp.json, {'shorturl': ['Field cannot be longer than 23 characters.']})
 
     def test_custom_url_disallowed_characters(self):
         pass

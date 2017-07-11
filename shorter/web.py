@@ -34,7 +34,7 @@ app = Flask(__name__)
 app.secret_key = 'OGV1Ra6mUNiHyTeOxOa00QlZ09FeIxO'
 
 OUR_HOSTNAME = urlparse(config.base_url).hostname
-
+MAX_SHORTURL_LENGTH = 23
 
 @app.route("/")
 def index():
@@ -43,7 +43,12 @@ def index():
 
 class ShortenForm(FlaskForm):
     url = StringField('url', validators=[validators.input_required()])
-    shorturl = StringField('shorturl', validators=[validators.optional()])
+    shorturl = StringField(
+        'shorturl',
+        validators=[
+            validators.optional(),
+            validators.Length(max=MAX_SHORTURL_LENGTH)
+        ])
 
 
 @app.route("/", methods=['POST'])
