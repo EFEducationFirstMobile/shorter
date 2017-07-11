@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with shorter. If not, see <http://www.gnu.org/licenses/>.
 
+import base64
 from urllib.parse import urljoin
 import unittest
 
@@ -43,6 +44,19 @@ class WebTest(unittest.TestCase):
         app.config['WTF_CSRF_ENABLED'] = False
         self.client = app.test_client()
 
+        username = 'foo'
+        password = 'bar'
+        db_session.add(
+            database.User(
+                username=username, password=password))
+        db_session.commit()
+
+        base64_creds = base64.standard_b64encode(
+            '{}:{}'.format(username, password).encode('utf-8')
+        ).decode('utf-8')
+        self._auth_headers = {
+            'Authorization': 'Basic {}'.format(base64_creds)}
+
     def tearDown(self):
         db_session.remove()
 
@@ -52,20 +66,20 @@ class WebTest(unittest.TestCase):
         self.assertEqual(resp.json, {'url': ['This field is required.']})
 
     def test_invalid_url(self):
-        resp = self.client.post('/', data=dict(url='not-a-url'))
+        resp = self._post('/', data=dict(url='not-a-url'))
         self.assertEqual(resp.status_code, 400)
         self.assertIn("This URL is malformed: not-a-url",
                       resp.data.decode('utf-8'))
 
     def test_our_url(self):
-        resp = self.client.post('/', data=dict(url=config.base_url + '/foo'))
+        resp = self._post('/', data=dict(url=config.base_url + '/foo'))
         self.assertEqual(resp.status_code, 400)
         self.assertIn("That is already a Shorter link.",
                       resp.data.decode('utf-8'))
 
     def test_custom_url(self):
         shorturl = "myshorturl"
-        resp = self.client.post(
+        resp = self._post(
             '/', data=dict(
                 url=TEST_URL,
                 shorturl=shorturl))
@@ -130,7 +144,7 @@ class WebTest(unittest.TestCase):
                           'alphanumeric chars.']})
 
     def test_shortened_url(self):
-        resp = self.client.post('/', data=dict(url=TEST_URL))
+        resp = self._post('/', data=dict(url=TEST_URL))
 
         self.assertEqual(resp.status_code, 200)
         self.assertIn(urljoin(config.base_url, "1"), resp.data.decode('utf-8'))
@@ -141,7 +155,7 @@ class WebTest(unittest.TestCase):
         self.assertEqual(resp.status_code, 404)
 
     def test_expand_found(self):
-        self.client.post('/', data=dict(url=TEST_URL))
+        self._post('/', data=dict(url=TEST_URL))
         resp = self.client.get('/1')
         self.assertEqual(resp.status_code, 302)
         self.assertEqual(resp.headers['location'], TEST_URL)
@@ -150,7 +164,7 @@ class WebTest(unittest.TestCase):
         self.assertEqual(url.accessed, 1)
 
     def test_expand_json(self):
-        self.client.post('/', data=dict(url=TEST_URL))
+        self._post('/', data=dict(url=TEST_URL))
         default_shorturl = '/1'
         resp = self.json_get(default_shorturl)
 
@@ -161,8 +175,7 @@ class WebTest(unittest.TestCase):
             {'shorturl': urljoin(config.base_url, default_shorturl),
              'url': TEST_URL,
              'created': db_url.created.isoformat(),
-             'accessed': 0
-            })
+             'accessed': 0})
 
     def json_get(self, *args, **kwargs):
         response = self._json_req(*args, method='get', **kwargs)
@@ -173,13 +186,25 @@ class WebTest(unittest.TestCase):
         return response
 
     def _json_req(self, *args, method='get', **kwargs):
+        headers = dict(
+            Accept='application/json',
+            **self._auth_headers
+        )
+
         try:
-            kwargs['headers']['Accept'] = 'application/json'
+            kwargs['headers'].extend(headers)
         except KeyError:
-            kwargs['headers'] = {
-                'Accept': 'application/json'
-            }
+            kwargs['headers'] = headers
+
         method = getattr(self.client, method)
         response = method(*args, **kwargs)
         response.json = get_response_json(response)
         return response
+
+    def _post(self, *args, **kwargs):
+        try:
+            kwargs['headers'].extend(self._auth_headers)
+        except KeyError:
+            kwargs['headers'] = self._auth_headers
+
+        return self.client.post(*args, **kwargs)

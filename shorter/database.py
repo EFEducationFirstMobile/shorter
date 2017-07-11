@@ -15,8 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with shorter. If not, see <http://www.gnu.org/licenses/>.
 
+import hmac
 import re
 
+import bcrypt
 from sqlalchemy import (
     Column,
     DateTime,
@@ -34,7 +36,11 @@ from shorter.config import sql_connection
 from shorter import exception
 from shorter.shorten import int_to_base36
 
+
 ENGINE = create_engine(sql_connection)
+# rounds for the bcrypt salt algo
+SALT_ROUNDS = 8
+
 Base = declarative_base()
 db_session = scoped_session(sessionmaker(bind=ENGINE))
 
@@ -74,7 +80,6 @@ class Url(Base):
         return url
 
 
-
 urls = Table('urls', Base.metadata, autoload=True, autoload_with=ENGINE)
 
 
@@ -87,3 +92,28 @@ def base36ify(mapper, connect, target, retval=True):
         connect.execute(urls.update().where(urls.c.id == target.id),
                         {'short': int_to_base36(int(target.id))})
     return target
+
+
+class User(Base):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String, nullable=False, unique=True)
+    password = Column(String, nullable=False)
+
+    @validates('password')
+    def validate_password(self, _, password):
+        return _hash_password(password)
+
+    def check_password(self, password):
+        return hmac.compare_digest(
+            self.password.encode('utf-8'),
+            bcrypt.hashpw(
+                password.encode('utf-8'),
+                self.password.encode('utf-8')))
+
+
+def _hash_password(password):
+    return bcrypt.hashpw(
+        password.encode('utf-8'),
+        bcrypt.gensalt(SALT_ROUNDS)).decode('utf-8')

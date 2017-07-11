@@ -26,6 +26,7 @@ from flask import (
     redirect,
     render_template,
 )
+from flask_httpauth import HTTPBasicAuth
 from flask_wtf import FlaskForm
 from sqlalchemy import orm
 from sqlalchemy.exc import IntegrityError
@@ -39,12 +40,24 @@ from shorter.shorten import BASE36_CHARS
 from shorter.utils import request_wants_json
 
 
+auth = HTTPBasicAuth()
 app = Flask(__name__)
 # TODO move to envvar
 app.secret_key = 'OGV1Ra6mUNiHyTeOxOa00QlZ09FeIxO'
 
 OUR_HOSTNAME = urlparse(config.base_url).hostname
 MAX_SHORTURL_LENGTH = 23
+
+
+@auth.verify_password
+def verify_password(username, password):
+    try:
+        user = db_session.query(database.User).filter_by(
+            username=username).one()
+    except orm.exc.NoResultFound:
+        return False
+
+    return user.check_password(password)
 
 
 @app.after_request
@@ -74,6 +87,7 @@ class ShortenForm(FlaskForm):
 
 
 @app.route("/", methods=['POST'])
+@auth.login_required
 def shorten():
     """Shorten a URL, returning another URL which will redirect to :url:
 
