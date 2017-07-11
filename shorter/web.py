@@ -78,13 +78,13 @@ def shorten():
 
     url = form.url.data
 
+    if urlparse(url).hostname == OUR_HOSTNAME:
+        abort(400, "That is already a Shorter link.")
+
     try:
         db_url = database.Url(url, short=form.shorturl.data)
     except exception.InvalidURL as e:
         abort(400, e)
-
-    if urlparse(url).hostname == OUR_HOSTNAME:
-        abort(400, "That is already a Shorter link.")
 
     _save_url(db_url)
 
