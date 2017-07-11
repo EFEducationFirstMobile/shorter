@@ -67,7 +67,7 @@ class ShortenForm(FlaskForm):
 
 @app.route("/", methods=['POST'])
 def shorten():
-    """Shortens a URL, returning another URL which will redirect to :url:
+    """Shorten a URL, returning another URL which will redirect to :url:
 
     :url: a valid URL which will be shortened
 
@@ -127,7 +127,7 @@ def _save_url(db_url):
 
 @app.route("/<short>")
 def expand(short):
-    """Redirects the user to a URL which has already been shortened
+    """Redirect the user to a URL which has already been shortened
 
     :short: a string which identifies an already shortened URL
 

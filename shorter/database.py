@@ -65,6 +65,7 @@ class Url(Base):
         return url
 
 
+
 urls = Table('urls', Base.metadata, autoload=True, autoload_with=ENGINE)
 
 

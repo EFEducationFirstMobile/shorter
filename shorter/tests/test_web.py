@@ -110,8 +110,9 @@ class WebTest(unittest.TestCase):
                 shorturl=shorturl))
         self.assertEqual(resp.status_code, 400, resp.data)
         self.assertEqual(
-            resp.json, {'shorturl': ['Make sure the `shorturl` field is no more than 23 '
-                                     'alphanumeric chars.']})
+            resp.json,
+            {'shorturl': ['Make sure the `shorturl` field is no more than 23 '
+                          'alphanumeric chars.']})
 
     def test_custom_url_disallowed_characters(self):
         shorturl = "ș"
@@ -121,8 +122,9 @@ class WebTest(unittest.TestCase):
                 shorturl=shorturl))
         self.assertEqual(resp.status_code, 400, resp.data)
         self.assertEqual(
-            resp.json, {'shorturl': ['Make sure the `shorturl` field is no more than 23 '
-                                     'alphanumeric chars.']})
+            resp.json,
+            {'shorturl': ['Make sure the `shorturl` field is no more than 23 '
+                          'alphanumeric chars.']})
 
     def test_shortened_url(self):
         resp = self.client.post('/', data=dict(url=TEST_URL))
