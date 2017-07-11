@@ -24,8 +24,8 @@ from flask import (
     jsonify,
     make_response,
     redirect,
-    render_template,
 )
+from flask_httpauth import HTTPBasicAuth
 from flask_wtf import FlaskForm
 from sqlalchemy import orm
 from sqlalchemy.exc import IntegrityError
@@ -35,9 +35,7 @@ from shorter import config
 from shorter import database
 from shorter.database import db_session
 from shorter import exception
-from shorter.httpauth import HTTPBasicAuth
 from shorter.shorten import BASE36_CHARS
-from shorter.utils import request_wants_json
 
 
 auth = HTTPBasicAuth()
@@ -73,16 +71,9 @@ def call_after_request_callbacks(response):
 
 
 @app.route("/")
-@auth.login_optional
+@auth.login_required
 def index():
-    """Show the frontpage
-
-    If a JSON content-type is expected, then return the list of URLs
-    that the logged in user has shortened.
-    """
-    if not request_wants_json():
-        return render_template("index.html")
-
+    """Return the list of URLs that the logged in user has shortened"""
     return jsonify(
         [url.to_dict() for url in g.user.urls])
 
@@ -116,17 +107,15 @@ def shorten():
     url = form.url.data
 
     if urlparse(url).hostname == OUR_HOSTNAME:
-        abort(400, "That is already a Shorter link.")
+        return jsonify({'error': "That is already a Shorter link."}), 400
 
     db_url = _save_url(url, form.shorturl.data, g.user)
 
     full_shorturl = urljoin(config.base_url, db_url.short)
 
-    if request_wants_json():
-        return jsonify(
-            url=url,
-            shorturl=full_shorturl)
-    return render_template("shorter.html", original=url, shorter=full_shorturl)
+    return jsonify(
+        url=url,
+        shorturl=full_shorturl)
 
 
 def _save_url(url, shorturl, user):
@@ -150,7 +139,10 @@ def _save_url(url, shorturl, user):
         db_url = database.Url(
             url, short=shorturl, user=user)
     except exception.InvalidURL as e:
-        abort(400, e)
+        abort(
+            make_response(
+                jsonify({'error': str(e)}),
+                400))
 
     # between the time we checked for it, a different process might have
     # created it, so we could still get an IntegrityError because
@@ -167,7 +159,7 @@ def _save_url(url, shorturl, user):
 
 @app.route("/<short>")
 def expand(short):
-    """Redirect the user to a URL which has already been shortened
+    """Return information about a shortened URL
 
     :short: a string which identifies an already shortened URL
 
@@ -177,8 +169,15 @@ def expand(short):
     except orm.exc.NoResultFound:
         abort(404)
 
-    if request_wants_json():
-        return jsonify(url.to_dict())
+    return jsonify(url.to_dict())
+
+
+@app.route("/<short>/redirect")
+def redir(short):
+    try:
+        url = db_session.query(database.Url).filter_by(short=short).one()
+    except orm.exc.NoResultFound:
+        abort(404)
 
     @after_this_request
     def increment_accessed(response):

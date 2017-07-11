@@ -66,20 +66,20 @@ class WebTest(unittest.TestCase):
         self.assertEqual(resp.json, {'url': ['This field is required.']})
 
     def test_invalid_url(self):
-        resp = self._post('/', data=dict(url='not-a-url'))
+        resp = self.json_post('/', data=dict(url='not-a-url'))
         self.assertEqual(resp.status_code, 400)
-        self.assertIn("This URL is malformed: not-a-url",
-                      resp.data.decode('utf-8'))
+        self.assertEqual(
+            resp.json['error'], "This URL is malformed: not-a-url")
 
     def test_our_url(self):
-        resp = self._post('/', data=dict(url=config.base_url + '/foo'))
+        resp = self.json_post('/', data=dict(url=config.base_url + '/foo'))
         self.assertEqual(resp.status_code, 400)
         self.assertIn("That is already a Shorter link.",
                       resp.data.decode('utf-8'))
 
     def test_custom_url(self):
         shorturl = "myshorturl"
-        resp = self._post(
+        resp = self.json_post(
             '/', data=dict(
                 url=TEST_URL,
                 shorturl=shorturl))
@@ -144,7 +144,7 @@ class WebTest(unittest.TestCase):
                           'alphanumeric chars.']})
 
     def test_shortened_url(self):
-        resp = self._post('/', data=dict(url=TEST_URL))
+        resp = self.json_post('/', data=dict(url=TEST_URL))
 
         self.assertEqual(resp.status_code, 200)
         self.assertIn(urljoin(config.base_url, "1"), resp.data.decode('utf-8'))
@@ -154,9 +154,9 @@ class WebTest(unittest.TestCase):
 
         self.assertEqual(resp.status_code, 404)
 
-    def test_expand_found(self):
-        self._post('/', data=dict(url=TEST_URL))
-        resp = self.client.get('/1')
+    def test_redirect(self):
+        self.json_post('/', data=dict(url=TEST_URL))
+        resp = self.client.get('/1/redirect')
         self.assertEqual(resp.status_code, 302)
         self.assertEqual(resp.headers['location'], TEST_URL)
 
@@ -164,7 +164,7 @@ class WebTest(unittest.TestCase):
         self.assertEqual(url.accessed, 1)
 
     def test_expand_json(self):
-        self._post('/', data=dict(url=TEST_URL))
+        self.json_post('/', data=dict(url=TEST_URL))
         default_shorturl = '/1'
         resp = self.json_get(default_shorturl)
 
@@ -219,11 +219,3 @@ class WebTest(unittest.TestCase):
         response = method(*args, **kwargs)
         response.json = get_response_json(response)
         return response
-
-    def _post(self, *args, **kwargs):
-        try:
-            kwargs['headers'].extend(self._auth_headers)
-        except KeyError:
-            kwargs['headers'] = self._auth_headers
-
-        return self.client.post(*args, **kwargs)

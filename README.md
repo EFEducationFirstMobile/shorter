@@ -4,7 +4,7 @@ Shorter is a simple URL Shortener built with Flask and SQLAlchemy named after a 
 
 ## Installation
 
-Shorter has only been tested with python 3.3.x. 
+Shorter has only been tested with python 3.5.2.
 
 Install the requirements from the ``requirements.txt`` file:
 
@@ -31,24 +31,8 @@ $ ./run_server.py
 
 ## Testing
 
-You can run most of the tests from the project's base directory using your favourite python test runner e.g.
+You can run the tests from the project's base directory using your favourite python test runner e.g.
 
 ```bash
 $ python -m unittest discover
-```
-
-### WebUI tests
-
-The webUI tests (located in the ``shorter/tests/webui`` directory) are not run together with the other tests because they have more requirements.
-
-You'll need a few extra dependencies first:
-
-```bash
-$ pip install -r test-requirements.txt
-```
-
-You'll also need to have an X server running and the Firefox browser installed. Make sure the ``base_url`` value in ``shorter/config.py`` is correct. Then you can run the webui tests like e.g.:
-
-```bash
-$ python -m unittest discover -s shorter/tests/webui/
 ```
