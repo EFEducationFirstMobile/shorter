@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 Ionuț Arțăriși <ionut@artarisi.eu>
+# Copyright (c) 2014-2017 Ionuț Arțăriși <ionut@artarisi.eu>
 # This file is part of shorter.
 
 # shorter is free software: you can redistribute it and/or modify
@@ -22,6 +22,7 @@ from sqlalchemy import create_engine
 
 from shorter import config
 from shorter.database import Base, db_session
+from shorter.utils import get_response_json
 from shorter.web import app
 
 TEST_URL = 'http://example.com'
@@ -69,6 +70,20 @@ class WebTest(unittest.TestCase):
         self.assertIn(
             urljoin(config.base_url, shorturl), resp.data.decode('utf-8'))
 
+    def test_custom_url_json(self):
+        shorturl = "myshorturl"
+        url = 'http://example.com'
+        resp = self.json_post(
+            '/', data=dict(
+                url=url,
+                shorturl=shorturl
+            ))
+        self.assertEqual(resp.status_code, 200, resp.data)
+        self.assertEqual(
+            resp.json,
+            {'shorturl': urljoin(config.base_url, shorturl),
+             'url': url})
+
     def test_custom_url_already_taken(self):
         pass
 
@@ -94,3 +109,34 @@ class WebTest(unittest.TestCase):
         resp = self.client.get('/1')
         self.assertEqual(resp.status_code, 302)
         self.assertEqual(resp.headers['location'], TEST_URL)
+
+    def test_expand_json(self):
+        self.client.post('/', data=dict(url=TEST_URL))
+        default_shorturl = '/1'
+        resp = self.json_get(default_shorturl)
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(
+            resp.json,
+            {'shorturl': urljoin(config.base_url, default_shorturl),
+             'url': TEST_URL})
+
+    def json_get(self, *args, **kwargs):
+        response = self._json_req(*args, method='get', **kwargs)
+        return response
+
+    def json_post(self, *args, **kwargs):
+        response = self._json_req(*args, method='post', **kwargs)
+        return response
+
+    def _json_req(self, *args, method='get', **kwargs):
+        try:
+            kwargs['headers']['Accept'] = 'application/json'
+        except KeyError:
+            kwargs['headers'] = {
+                'Accept': 'application/json'
+            }
+        method = getattr(self.client, method)
+        response = method(*args, **kwargs)
+        response.json = get_response_json(response)
+        return response

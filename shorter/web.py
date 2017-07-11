@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2014 Ionuț Arțăriși <ionut@artarisi.eu>
+# Copyright (c) 2014-2017 Ionuț Arțăriși <ionut@artarisi.eu>
 # This file is part of shorter.
 
 # shorter is free software: you can redistribute it and/or modify
@@ -17,14 +17,14 @@
 
 from urllib.parse import urljoin, urlparse
 
-from flask import Flask
-from flask import abort, redirect, render_template, request
+from flask import Flask, abort, jsonify, redirect, render_template, request
 from sqlalchemy import orm
 
 from shorter import config
 from shorter import database
 from shorter.database import db_session
 from shorter import exception
+from shorter.utils import request_wants_json
 
 app = Flask(__name__)
 
@@ -61,9 +61,13 @@ def shorten():
     db_session.add(db_url)
     db_session.commit()
 
-    shorter = urljoin(config.base_url, db_url.short)
+    full_shorturl = urljoin(config.base_url, db_url.short)
 
-    return render_template("shorter.html", original=url, shorter=shorter)
+    if request_wants_json():
+        return jsonify(
+            url=url,
+            shorturl=full_shorturl)
+    return render_template("shorter.html", original=url, shorter=full_shorturl)
 
 
 @app.route("/<short>")
@@ -78,6 +82,12 @@ def expand(short):
     except orm.exc.NoResultFound:
         abort(404)
 
+    if request_wants_json():
+        full_shorturl = urljoin(config.base_url, url.short)
+        return jsonify(
+            url=url.url,
+            shorturl=full_shorturl
+        )
     return redirect(url.url)
 
 
