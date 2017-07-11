@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with shorter. If not, see <http://www.gnu.org/licenses/>.
 
-DIGITS = "0123456789abcdefghijklmnopqrstuvwxyz"
+BASE36_CHARS = "0123456789abcdefghijklmnopqrstuvwxyz"
 
 
 def int_to_base36(i):
@@ -29,7 +29,7 @@ def int_to_base36(i):
     base36 = []
     while factor >= 0:
         j = 36 ** factor
-        base36.append(DIGITS[i//j])
+        base36.append(BASE36_CHARS[i//j])
         i = i % j
         factor -= 1
     return ''.join(base36)

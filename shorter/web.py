@@ -26,6 +26,7 @@ from shorter import config
 from shorter import database
 from shorter.database import db_session
 from shorter import exception
+from shorter.shorten import BASE36_CHARS
 from shorter.utils import request_wants_json
 
 
@@ -47,7 +48,11 @@ class ShortenForm(FlaskForm):
         'shorturl',
         validators=[
             validators.optional(),
-            validators.Length(max=MAX_SHORTURL_LENGTH)
+            validators.Regexp(
+                r'^[{chars}]{{,23}}$'.format(chars=BASE36_CHARS),
+                message=('Make sure the `shorturl` field is no more than 23 '
+                         'alphanumeric chars.')
+            )
         ])
 
 
