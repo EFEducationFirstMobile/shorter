@@ -98,7 +98,7 @@ class ShortenForm(FlaskForm):
 @app.route("/", methods=['POST'])
 @auth.login_required
 def shorten():
-    """Shorten a URL, returning another URL which will redirect to :url:
+    """Create a shortened url and return its representation
 
     :url: a valid URL which will be shortened
 
