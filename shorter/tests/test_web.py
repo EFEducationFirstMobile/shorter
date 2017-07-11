@@ -83,7 +83,24 @@ class WebTest(unittest.TestCase):
              'url': TEST_URL})
 
     def test_custom_url_already_taken(self):
-        pass
+        # given a shorturl was already used
+        shorturl = "myshorturl"
+        self.json_post(
+            '/', data=dict(
+                url=TEST_URL,
+                shorturl=shorturl))
+
+        # when trying to shorten (a different) url to the same shorturl
+        resp = self.json_post(
+            '/', data=dict(
+                url=urljoin(TEST_URL, '1'),
+                shorturl=shorturl))
+        self.assertEqual(
+            resp.json,
+            {
+                'error': (
+                    'Could not create new link. '
+                    'One with the given `shorturl` already exists')})
 
     def test_custom_url_too_long(self):
         shorturl = "o" * 24

@@ -17,9 +17,17 @@
 
 from urllib.parse import urljoin, urlparse
 
-from flask import Flask, abort, jsonify, redirect, render_template
+from flask import (
+    Flask,
+    abort,
+    jsonify,
+    make_response,
+    redirect,
+    render_template,
+)
 from flask_wtf import FlaskForm
 from sqlalchemy import orm
+from sqlalchemy.exc import IntegrityError
 from wtforms import StringField, validators
 
 from shorter import config
@@ -36,6 +44,7 @@ app.secret_key = 'OGV1Ra6mUNiHyTeOxOa00QlZ09FeIxO'
 
 OUR_HOSTNAME = urlparse(config.base_url).hostname
 MAX_SHORTURL_LENGTH = 23
+
 
 @app.route("/")
 def index():
@@ -68,6 +77,7 @@ def shorten():
         return jsonify(form.errors), 400
 
     url = form.url.data
+
     try:
         db_url = database.Url(url, short=form.shorturl.data)
     except exception.InvalidURL as e:
@@ -76,8 +86,7 @@ def shorten():
     if urlparse(url).hostname == OUR_HOSTNAME:
         abort(400, "That is already a Shorter link.")
 
-    db_session.add(db_url)
-    db_session.commit()
+    _save_url(db_url)
 
     full_shorturl = urljoin(config.base_url, db_url.short)
 
@@ -86,6 +95,34 @@ def shorten():
             url=url,
             shorturl=full_shorturl)
     return render_template("shorter.html", original=url, shorter=full_shorturl)
+
+
+def _save_url(db_url):
+    """Save URL to the database"""
+    error_resp = make_response(
+            jsonify(
+                {
+                    'error': (
+                        "Could not create new link. "
+                        "One with the given `shorturl` already exists")}),
+            400)
+
+    # first make sure it's not already in the database
+    already_exists = db_session.query(database.Url).filter_by(
+        short=db_url.short).one_or_none()
+
+    if already_exists:
+        raise abort(error_resp)
+
+    # between the time we checked for it, a different process might have
+    # created it, so we could still get an IntegrityError because
+    # `short` is not unique when saving it to the database
+    try:
+        db_session.add(db_url)
+        db_session.commit()
+    except IntegrityError as e:
+        db_session.rollback()
+        raise abort(error_resp)
 
 
 @app.route("/<short>")
