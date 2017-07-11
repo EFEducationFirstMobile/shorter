@@ -22,6 +22,7 @@ import bcrypt
 from sqlalchemy import (
     Column,
     DateTime,
+    ForeignKey,
     Integer,
     String,
     Table,
@@ -30,7 +31,12 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import scoped_session, sessionmaker, validates
+from sqlalchemy.orm import (
+    backref,
+    relationship,
+    scoped_session,
+    sessionmaker,
+    validates)
 
 from shorter.config import sql_connection
 from shorter import exception
@@ -52,10 +58,16 @@ class Url(Base):
     url = Column(String)
     short = Column(String, index=True, unique=True)
     created = Column(DateTime(), nullable=False, default=func.now())
+    created_by = Column(Integer, ForeignKey('users.id'), nullable=False)
     accessed = Column(Integer, nullable=False, server_default='0')
 
-    def __init__(self, url, short=None):
+    user = relationship(
+        'User',
+        backref=backref('urls'))
+
+    def __init__(self, url, user, short=None):
         self.url = url.strip()
+        self.user = user
         if not short:
             short = None
         self.short = short

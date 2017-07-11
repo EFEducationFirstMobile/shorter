@@ -57,7 +57,12 @@ def verify_password(username, password):
     except orm.exc.NoResultFound:
         return False
 
-    return user.check_password(password)
+    valid_password = user.check_password(password)
+    if not valid_password:
+        return False
+
+    g.user = user
+    return True
 
 
 @app.after_request
@@ -103,12 +108,7 @@ def shorten():
     if urlparse(url).hostname == OUR_HOSTNAME:
         abort(400, "That is already a Shorter link.")
 
-    try:
-        db_url = database.Url(url, short=form.shorturl.data)
-    except exception.InvalidURL as e:
-        abort(400, e)
-
-    _save_url(db_url)
+    db_url = _save_url(url, form.shorturl.data, g.user)
 
     full_shorturl = urljoin(config.base_url, db_url.short)
 
@@ -119,7 +119,7 @@ def shorten():
     return render_template("shorter.html", original=url, shorter=full_shorturl)
 
 
-def _save_url(db_url):
+def _save_url(url, shorturl, user):
     """Save URL to the database"""
     error_resp = make_response(
             jsonify(
@@ -131,20 +131,28 @@ def _save_url(db_url):
 
     # first make sure it's not already in the database
     already_exists = db_session.query(database.Url).filter_by(
-        short=db_url.short).one_or_none()
+        short=shorturl).one_or_none()
 
     if already_exists:
         raise abort(error_resp)
 
+    try:
+        db_url = database.Url(
+            url, short=shorturl, user=user)
+    except exception.InvalidURL as e:
+        abort(400, e)
+
     # between the time we checked for it, a different process might have
     # created it, so we could still get an IntegrityError because
     # `short` is not unique when saving it to the database
+    db_session.add(db_url)
     try:
-        db_session.add(db_url)
         db_session.commit()
     except IntegrityError as e:
         db_session.rollback()
         raise abort(error_resp)
+
+    return db_url
 
 
 @app.route("/<short>")

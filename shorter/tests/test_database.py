@@ -30,12 +30,20 @@ EXAMPLE_URL = 'http://example.com'
 class DatabaseTest(unittest.TestCase):
     def setUp(self):
         engine = create_engine('sqlite://')
+        self.session = database.db_session
+        self.session.configure(bind=engine)
         database.Base.metadata.create_all(bind=engine)
-        Session = orm.sessionmaker(bind=engine)
-        self.session = Session()
+
+        self.test_user = database.User(
+            username='me', password='secret')
+        self.session.add(self.test_user)
+        self.session.commit()
+
+    def tearDown(self):
+        self.session.remove()
 
     def _create_url(self):
-        url = database.Url(EXAMPLE_URL)
+        url = database.Url(EXAMPLE_URL, self.test_user)
         self.session.add(url)
         self.session.commit()
         return url
@@ -50,20 +58,23 @@ class DatabaseTest(unittest.TestCase):
         self.assertEqual(url.short, '1')
 
     def test_short_url_attribute_base36(self):
-        url = database.Url(EXAMPLE_URL)
+        url = database.Url(EXAMPLE_URL, self.test_user)
         url.id = '47'
         self.session.add(url)
         self.session.commit()
         self.assertEqual(url.short, '1b')
 
     def test_invalid_url_raises(self):
-        self.assertRaises(exception.InvalidURL, database.Url, '')
-        self.assertRaises(exception.InvalidURL, database.Url, 'not-a-url')
-        self.assertRaises(exception.InvalidURL, database.Url,
-                          'http://almost-a.url/but/?it=has& spa ces')
+        self.assertRaises(
+            exception.InvalidURL, database.Url, '', self.test_user)
+        self.assertRaises(
+            exception.InvalidURL, database.Url, 'not-a-url', self.test_user)
+        self.assertRaises(
+            exception.InvalidURL, database.Url,
+            'http://almost-a.url/but/?it=has& spa ces', self.test_user)
 
     def test_url_spaces_are_stripped(self):
-        url = database.Url('  {0}   '.format(EXAMPLE_URL))
+        url = database.Url('  {0}   '.format(EXAMPLE_URL), self.test_user)
         self.assertEqual(url.url, EXAMPLE_URL)
 
     def test_query_by_short(self):
@@ -76,7 +87,7 @@ class DatabaseTest(unittest.TestCase):
 
     def test_short_attr_is_unique(self):
         url = self._create_url()
-        url2 = database.Url(EXAMPLE_URL)
+        url2 = database.Url(EXAMPLE_URL, self.test_user)
         url2.short = url.short
         self.session.add(url2)
         self.assertRaises(exc.IntegrityError, self.session.commit)
@@ -91,7 +102,7 @@ class DatabaseTest(unittest.TestCase):
     def test_accepts_url_with_no_scheme(self):
         test_url = 'www.example.com'
         try:
-            database.Url(test_url)
+            database.Url(test_url, self.test_user)
         except exception.InvalidURL:
             self.fail("URL without scheme raised validation error: "
                       + test_url)
