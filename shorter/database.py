@@ -41,6 +41,8 @@ class Url(Base):
 
     def __init__(self, url, short=None):
         self.url = url.strip()
+        if not short:
+            short = None
         self.short = short
 
     def __repr__(self):

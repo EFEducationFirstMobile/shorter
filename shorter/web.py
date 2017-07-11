@@ -17,8 +17,10 @@
 
 from urllib.parse import urljoin, urlparse
 
-from flask import Flask, abort, jsonify, redirect, render_template, request
+from flask import Flask, abort, jsonify, redirect, render_template
+from flask_wtf import FlaskForm
 from sqlalchemy import orm
+from wtforms import StringField, validators
 
 from shorter import config
 from shorter import database
@@ -26,7 +28,10 @@ from shorter.database import db_session
 from shorter import exception
 from shorter.utils import request_wants_json
 
+
 app = Flask(__name__)
+# TODO move to envvar
+app.secret_key = 'OGV1Ra6mUNiHyTeOxOa00QlZ09FeIxO'
 
 OUR_HOSTNAME = urlparse(config.base_url).hostname
 
@@ -36,6 +41,11 @@ def index():
     return render_template("index.html")
 
 
+class ShortenForm(FlaskForm):
+    url = StringField('url', validators=[validators.input_required()])
+    shorturl = StringField('shorturl', validators=[validators.optional()])
+
+
 @app.route("/", methods=['POST'])
 def shorten():
     """Shortens a URL, returning another URL which will redirect to :url:
@@ -43,15 +53,13 @@ def shorten():
     :url: a valid URL which will be shortened
 
     """
-    try:
-        url = request.form['url']
-    except KeyError:
-        abort(400, "The required form value argument 'url' was not provided.")
+    form = ShortenForm()
+    if not form.validate():
+        return jsonify(form.errors), 400
 
-    shorturl = request.form.get('shorturl', None)
-
+    url = form.url.data
     try:
-        db_url = database.Url(url, short=shorturl)
+        db_url = database.Url(url, short=form.shorturl.data)
     except exception.InvalidURL as e:
         abort(400, e)
 

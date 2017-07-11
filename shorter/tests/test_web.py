@@ -36,16 +36,17 @@ class WebTest(unittest.TestCase):
         Base.metadata.create_all(bind=engine)
 
         app.testing = True
+        # TODO test with csrf enabled
+        app.config['WTF_CSRF_ENABLED'] = False
         self.client = app.test_client()
 
     def tearDown(self):
         db_session.remove()
 
     def test_empty_post(self):
-        resp = self.client.post('/', data=dict())
+        resp = self.json_post('/', data=dict())
         self.assertEqual(resp.status_code, 400)
-        self.assertIn("The required form value argument 'url' "
-                      "was not provided.", resp.data.decode('utf-8'))
+        self.assertEqual(resp.json, {'url': ['This field is required.']})
 
     def test_invalid_url(self):
         resp = self.client.post('/', data=dict(url='not-a-url'))
