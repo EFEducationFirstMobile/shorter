@@ -27,8 +27,8 @@ from shorter.config import sql_connection
 from shorter import exception
 from shorter.shorten import int_to_base36
 
-Base = declarative_base()
 ENGINE = create_engine(sql_connection)
+Base = declarative_base()
 db_session = scoped_session(sessionmaker(bind=ENGINE))
 
 
@@ -39,8 +39,9 @@ class Url(Base):
     url = Column(String)
     short = Column(String, index=True, unique=True)
 
-    def __init__(self, url):
+    def __init__(self, url, short=None):
         self.url = url.strip()
+        self.short = short
 
     def __repr__(self):
         return "<Url(id={0} url={1})>".format(self.id, self.url)
@@ -61,6 +62,7 @@ class Url(Base):
             raise exception.InvalidURL("This URL is malformed: " + url)
         return url
 
+
 urls = Table('urls', Base.metadata, autoload=True, autoload_with=ENGINE)
 
 
@@ -68,6 +70,8 @@ urls = Table('urls', Base.metadata, autoload=True, autoload_with=ENGINE)
 # use to store our own identifier for the urls
 @event.listens_for(Url, 'after_insert')
 def base36ify(mapper, connect, target, retval=True):
-    connect.execute(urls.update().where(urls.c.id == target.id),
-                    {'short': int_to_base36(int(target.id))})
+    # if `short` was already set, then we don't need to generate it
+    if target.short is None:
+        connect.execute(urls.update().where(urls.c.id == target.id),
+                        {'short': int_to_base36(int(target.id))})
     return target

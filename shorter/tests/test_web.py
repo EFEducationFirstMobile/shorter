@@ -58,6 +58,26 @@ class WebTest(unittest.TestCase):
         self.assertIn("That is already a Shorter link.",
                       resp.data.decode('utf-8'))
 
+    def test_custom_url(self):
+        shorturl = "myshorturl"
+        resp = self.client.post(
+            '/', data=dict(
+                url='http://example.com',
+                shorturl=shorturl
+            ))
+        self.assertEqual(resp.status_code, 200, resp.data)
+        self.assertIn(
+            urljoin(config.base_url, shorturl), resp.data.decode('utf-8'))
+
+    def test_custom_url_already_taken(self):
+        pass
+
+    def test_custom_url_too_long(self):
+        pass
+
+    def test_custom_url_disallowed_characters(self):
+        pass
+
     def test_shortened_url(self):
         resp = self.client.post('/', data=dict(url=TEST_URL))
 

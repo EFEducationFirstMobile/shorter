@@ -48,8 +48,10 @@ def shorten():
     except KeyError:
         abort(400, "The required form value argument 'url' was not provided.")
 
+    shorturl = request.form.get('shorturl', None)
+
     try:
-        db_url = database.Url(url)
+        db_url = database.Url(url, short=shorturl)
     except exception.InvalidURL as e:
         abort(400, e)
 
