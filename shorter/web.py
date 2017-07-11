@@ -42,6 +42,9 @@ auth = HTTPBasicAuth()
 app = Flask(__name__)
 # TODO move to envvar
 app.secret_key = 'OGV1Ra6mUNiHyTeOxOa00QlZ09FeIxO'
+# TODO enable CSRF
+app.config['WTF_CSRF_ENABLED'] = False
+
 
 OUR_HOSTNAME = urlparse(config.base_url).hostname
 MAX_SHORTURL_LENGTH = 23
