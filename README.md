@@ -4,18 +4,12 @@ Shorter is a simple URL Shortener built with Flask and SQLAlchemy named after a 
 
 ## Installation
 
-Shorter has only been tested with python 3.5.2.
+Shorter has only been tested with python 3.5.2, but it should work fine on recent python3 versions.
 
 Install the requirements from the ``requirements.txt`` file:
 
 ```
 $ pip install -r requirements.txt
-```
-
-Then install any python database library you might need for SQLAlchemy e.g. for postgresql:
-
-```
-$ pip install psycopg2
 ```
 
 To initialize the database, first configure the database connection in ``shorter/config.py`` (you'll have to create the database and user yourself) and then run the ``init_db.py`` script in the project's root directory.
