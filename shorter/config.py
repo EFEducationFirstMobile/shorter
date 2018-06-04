@@ -1,2 +1,2 @@
-sql_connection = 'postgresql://scott:tiger@localhost/shorter'
+sql_connection = 'sqlite:///database.sqlite3'
 base_url = 'http://localhost:5000'
