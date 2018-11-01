@@ -55,7 +55,7 @@ curl -H "Authorization: Basic amltbXk6c2VjcmV0" -H "Content-Type: application/js
 ```
 2. retrieve the original URL, given a short URL
 ```bash
-curl -v -H "Authorization: Basic amltbXk6c2VjcmV0" -H "Content-Type: application/json" \
+curl -v -H "Content-Type: application/json" \
      http://localhost:5000/foobar/redirect
 ...
 < HTTP/1.0 302 FOUND
@@ -78,7 +78,7 @@ b. when the shortening happened
 
 c. how many times the short URL has been accessed
 ```bash
-curl -H "Authorization: Basic amltbXk6c2VjcmV0" -H "Content-Type: application/json" \
+curl -H "Content-Type: application/json" \
      http://localhost:5000/foobar
 {
   "accessed": 1,
