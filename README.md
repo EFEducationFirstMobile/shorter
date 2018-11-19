@@ -20,7 +20,7 @@ In order to start the server, just run the ``run_server.py`` script in the proje
 
 ```bash
 $ ./run_server.py
- * Running on http://127.0.0.1:5000/
+ * Running on http://127.0.0.1:5432/
 ```
 
 ## Features
@@ -30,9 +30,9 @@ $ ./run_server.py
 a. given only the original URL, generate a random short URL
 ```bash
 curl -H "Authorization: Basic amltbXk6c2VjcmV0" -H "Content-Type: application/json" \
-     --data '{"url": "http://example.com"}' -X POST http://localhost:5000/
+     --data '{"url": "http://example.com"}' -X POST http://localhost:5432/
 {
-  "shorturl": "http://localhost:5000/1",
+  "shorturl": "http://localhost:5432/1",
   "url": "http://example.com"
 }
 ```
@@ -40,15 +40,15 @@ b. given both the original URL and the desired short URL, create the desired sho
 ```
 curl -H "Authorization: Basic amltbXk6c2VjcmV0" -H "Content-Type: application/json" \
      --data '{"url": "http://example.com", "shorturl": "foobar"}' \
-     http://localhost:5000/
+     http://localhost:5432/
 {
-  "shorturl": "http://localhost:5000/foobar",
+  "shorturl": "http://localhost:5432/foobar",
   "url": "http://example.com"
 }
 
 curl -H "Authorization: Basic amltbXk6c2VjcmV0" -H "Content-Type: application/json" \
      --data '{"url": "http://example.com", "shorturl": "foobar"}' \
-     http://localhost:5000/
+     http://localhost:5432/
 {
   "error": "Could not create new link. One with the given `shorturl` already exists"
 }
@@ -56,7 +56,7 @@ curl -H "Authorization: Basic amltbXk6c2VjcmV0" -H "Content-Type: application/js
 2. retrieve the original URL, given a short URL
 ```bash
 curl -v -H "Content-Type: application/json" \
-     http://localhost:5000/foobar/redirect
+     http://localhost:5432/foobar/redirect
 ...
 < HTTP/1.0 302 FOUND
 < Content-Type: text/html; charset=utf-8
@@ -79,11 +79,11 @@ b. when the shortening happened
 c. how many times the short URL has been accessed
 ```bash
 curl -H "Content-Type: application/json" \
-     http://localhost:5000/foobar
+     http://localhost:5432/foobar
 {
   "accessed": 1,
   "created": "2017-07-11T21:38:46.595948",
-  "shorturl": "http://localhost:5000/foobar",
+  "shorturl": "http://localhost:5432/foobar",
   "url": "http://example.com"
 }
 ```
@@ -91,18 +91,18 @@ curl -H "Content-Type: application/json" \
 4. see a list of the URLs he/she created and the information detailed in item 3
 ```bash
 curl -H "Authorization: Basic amltbXk6c2VjcmV0" -H "Content-Type: application/json" \
-     http://localhost:5000/
+     http://localhost:5432/
 [
   {
     "accessed": 0,
     "created": "2017-07-11T21:38:05.784988",
-    "shorturl": "http://localhost:5000/1",
+    "shorturl": "http://localhost:5432/1",
     "url": "http://example.com"
   },
   {
     "accessed": 2,
     "created": "2017-07-11T21:38:46.595948",
-    "shorturl": "http://localhost:5000/foobar",
+    "shorturl": "http://localhost:5432/foobar",
     "url": "http://example.com"
   }
 ]
