@@ -15,4 +15,4 @@ if __name__ == "__main__":
             User(username='jimmy', password='secret'))
         db_session.commit()
 
-    app.run()
+    app.run(port=5432)
