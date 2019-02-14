@@ -31,6 +31,9 @@ a. given only the original URL, generate a random short URL
 ```bash
 curl -H "Authorization: Basic amltbXk6c2VjcmV0" -H "Content-Type: application/json" \
      --data '{"url": "http://example.com"}' -X POST http://localhost:5000/
+```
+
+```
 {
   "shorturl": "http://localhost:5000/1",
   "url": "http://example.com"
@@ -41,14 +44,22 @@ b. given both the original URL and the desired short URL, create the desired sho
 curl -H "Authorization: Basic amltbXk6c2VjcmV0" -H "Content-Type: application/json" \
      --data '{"url": "http://example.com", "shorturl": "foobar"}' \
      http://localhost:5000/
+```
+
+```
 {
   "shorturl": "http://localhost:5000/foobar",
   "url": "http://example.com"
 }
+```
 
+```
 curl -H "Authorization: Basic amltbXk6c2VjcmV0" -H "Content-Type: application/json" \
      --data '{"url": "http://example.com", "shorturl": "foobar"}' \
      http://localhost:5000/
+```
+
+```
 {
   "error": "Could not create new link. One with the given `shorturl` already exists"
 }
@@ -57,6 +68,9 @@ curl -H "Authorization: Basic amltbXk6c2VjcmV0" -H "Content-Type: application/js
 ```bash
 curl -v -H "Content-Type: application/json" \
      http://localhost:5000/foobar/redirect
+```
+
+```
 ...
 < HTTP/1.0 302 FOUND
 < Content-Type: text/html; charset=utf-8
@@ -80,6 +94,9 @@ c. how many times the short URL has been accessed
 ```bash
 curl -H "Content-Type: application/json" \
      http://localhost:5000/foobar
+```
+
+```
 {
   "accessed": 1,
   "created": "2017-07-11T21:38:46.595948",
@@ -92,6 +109,9 @@ curl -H "Content-Type: application/json" \
 ```bash
 curl -H "Authorization: Basic amltbXk6c2VjcmV0" -H "Content-Type: application/json" \
      http://localhost:5000/
+```
+
+```
 [
   {
     "accessed": 0,
